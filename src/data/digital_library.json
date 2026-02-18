@@ -1,0 +1,24 @@
+[
+  {
+    "userId": "admin_user_001",
+    "items": [
+      {
+        "productId": "efv_v1_audiobook",
+        "title": "EFV™ VOL 1: ORIGIN CODE (AUDIOBOOK)",
+        "type": "Audiobook",
+        "purchasedAt": "2026-02-18T12:00:00.000Z",
+        "thumbnail": "img/vol1-cover.png"
+      },
+      {
+        "productId": "efv_v1_ebook",
+        "title": "EFV™ VOL 1: ORIGIN CODE™",
+        "type": "E-Book",
+        "purchasedAt": "2026-02-18T12:00:00.000Z",
+        "thumbnail": "img/vol1-cover.png",
+        "filePath": "ebooks/ebook-1771415074216-924304956-_____1.pdf"
+      }
+    ],
+    "_id": "LIB_ADMIN_001",
+    "updatedAt": "2026-02-18T11:44:34.528Z"
+  }
+]

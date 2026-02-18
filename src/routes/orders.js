@@ -1,6 +1,6 @@
 const express = require('express');
 const router = express.Router();
-const { Order, Product } = require('../models');
+const { Order, Product, User, DigitalLibrary } = require('../models');
 const adminAuth = require('../middleware/adminAuth');
 const { createRazorpayOrder, verifyPaymentSignature } = require('../utils/razorpay');
 
@@ -135,6 +135,44 @@ router.post('/verify', async (req, res) => {
             razorpaySignature: razorpay_signature,
             timeline: [{ status: 'Paid', note: 'Payment verified via Razorpay' }]
         });
+
+        // 3. Handle Digital Library Fulfillment
+        const user = await User.findOne({ email: customer.email });
+        if (user) {
+            const digitalItems = [];
+            for (const item of orderItems) {
+                if (item.type === 'EBOOK' || item.type === 'AUDIOBOOK') {
+                    const product = await Product.findById(item.productId);
+                    if (product) {
+                        digitalItems.push({
+                            productId: product._id,
+                            title: product.title,
+                            type: product.type === 'AUDIOBOOK' ? 'Audiobook' : 'E-Book',
+                            thumbnail: product.thumbnail,
+                            filePath: product.filePath,
+                            purchasedAt: new Date()
+                        });
+                    }
+                }
+            }
+
+            if (digitalItems.length > 0) {
+                let library = await DigitalLibrary.findOne({ userId: user._id });
+                if (!library) {
+                    library = new DigitalLibrary({ userId: user._id, items: [] });
+                }
+
+                // Add only if not already owned
+                digitalItems.forEach(di => {
+                    if (!library.items.some(li => li.productId.toString() === di.productId.toString())) {
+                        library.items.push(di);
+                    }
+                });
+
+                await library.save();
+                console.log(`✅ Digital items added to library for user: ${user.email}`);
+            }
+        }
 
         res.status(201).json({
             success: true,

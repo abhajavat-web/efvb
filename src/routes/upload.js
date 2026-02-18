@@ -7,20 +7,22 @@ const adminAuth = require('../middleware/adminAuth');
 // Configure storage
 const storage = multer.diskStorage({
     destination: function (req, file, cb) {
+        const rootDir = path.join(__dirname, '../../');
         if (file.fieldname === 'cover') {
-            cb(null, 'src/uploads/covers');
+            cb(null, path.join(rootDir, 'src/uploads/covers'));
         } else if (file.fieldname === 'ebook') {
-            cb(null, 'src/uploads/ebooks');
+            cb(null, path.join(rootDir, 'private-storage/ebooks'));
         } else if (file.fieldname === 'audio') {
-            cb(null, 'src/uploads/audiobooks');
+            cb(null, path.join(rootDir, 'private-storage/audiobooks'));
         } else {
             cb({ message: 'Invalid field name' }, false);
         }
     },
     filename: function (req, file, cb) {
-        // Sanitize filename and timestamp it
+        // Sanitize original name (remove spaces and special chars)
+        const safeName = file.originalname.replace(/[^a-z0-9.]/gi, '_').toLowerCase();
         const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
-        cb(null, file.fieldname + '-' + uniqueSuffix + path.extname(file.originalname));
+        cb(null, file.fieldname + '-' + uniqueSuffix + '-' + safeName);
     }
 });
 
@@ -28,15 +30,36 @@ const upload = multer({
     storage: storage,
     limits: { fileSize: 100 * 1024 * 1024 }, // 100MB limit
     fileFilter: function (req, file, cb) {
-        const filetypes = /jpeg|jpg|png|pdf|mp3|mpeg/;
-        const extname = filetypes.test(path.extname(file.originalname).toLowerCase());
-        const mimetype = filetypes.test(file.mimetype);
+        const ext = path.extname(file.originalname).toLowerCase();
+        const mime = file.mimetype.toLowerCase();
 
-        if (mimetype && extname) {
-            return cb(null, true);
-        } else {
-            cb('Error: Invalid file type!');
+        if (file.fieldname === 'cover') {
+            const allowedExts = ['.jpg', '.jpeg', '.png', '.webp'];
+            if (allowedExts.includes(ext) || mime.startsWith('image/')) {
+                return cb(null, true);
+            }
+        } else if (file.fieldname === 'ebook') {
+            // Expanded for all document types: pdf, docx, epub, mobi, txt, html, etc.
+            const allowedExts = ['.pdf', '.doc', '.docx', '.txt', '.epub', '.mobi', '.html', '.rtf', '.odt'];
+            if (allowedExts.includes(ext) ||
+                mime.includes('pdf') ||
+                mime.includes('word') ||
+                mime.includes('text') ||
+                mime.includes('epub') ||
+                mime.includes('mobi') ||
+                mime.includes('html') ||
+                mime.startsWith('application/octet-stream')) { // Fallback for some obscure ebook formats
+                return cb(null, true);
+            }
+        } else if (file.fieldname === 'audio') {
+            // Expanded for all audio types: mp3, wav, aac, flac, m4a, ogg, etc. + common video containers
+            const allowedExts = ['.mp3', '.mpeg', '.mp4', '.wav', '.aac', '.ogg', '.m4a', '.flac', '.wma', '.alac', '.opus'];
+            if (allowedExts.includes(ext) || mime.startsWith('audio/') || mime.startsWith('video/')) {
+                return cb(null, true);
+            }
         }
+
+        cb(new Error(`Invalid file type for ${file.fieldname}: ${ext} (${mime})`));
     }
 });
 
@@ -50,16 +73,18 @@ router.post('/', adminAuth, upload.fields([
         const files = req.files;
         const responseIds = {};
 
-        if (files.cover) responseIds.coverPath = files.cover[0].path;
-        if (files.ebook) responseIds.ebookPath = files.ebook[0].path;
-        if (files.audio) responseIds.audioPath = files.audio[0].path;
+        if (files.cover) responseIds.coverPath = `src/uploads/covers/${files.cover[0].filename}`;
+        if (files.ebook) responseIds.ebookPath = `ebooks/${files.ebook[0].filename}`;
+        if (files.audio) responseIds.audioPath = `audiobooks/${files.audio[0].filename}`;
+
+        console.log('✅ File Upload Success:', responseIds);
 
         res.json({
             message: 'Files uploaded successfully',
             paths: responseIds
         });
     } catch (error) {
-        console.error(error);
+        console.error('❌ Upload error:', error);
         res.status(500).json({ message: 'File upload failed' });
     }
 });

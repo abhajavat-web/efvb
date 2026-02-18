@@ -1,0 +1,30 @@
+[
+    {
+        "_id": "PURCHASE_001",
+        "userId": "mlrnq3u492vak53seqk",
+        "productId": "efv_v1_ebook",
+        "transactionId": "MANUAL_SEED_001",
+        "purchaseDate": "2026-02-18T12:00:00.000Z"
+    },
+    {
+        "_id": "PURCHASE_002",
+        "userId": "mlrnq3u492vak53seqk",
+        "productId": "efv_v1_audiobook",
+        "transactionId": "MANUAL_SEED_002",
+        "purchaseDate": "2026-02-18T12:00:00.000Z"
+    },
+    {
+        "_id": "PURCHASE_ADMIN_001",
+        "userId": "admin_user_001",
+        "productId": "efv_v1_audiobook",
+        "transactionId": "ADMIN_MASTER_PURCHASE",
+        "purchaseDate": "2026-02-18T12:00:00.000Z"
+    },
+    {
+        "_id": "PURCHASE_ADMIN_002",
+        "userId": "admin_user_001",
+        "productId": "efv_v1_ebook",
+        "transactionId": "ADMIN_MASTER_PURCHASE",
+        "purchaseDate": "2026-02-18T12:00:00.000Z"
+    }
+]

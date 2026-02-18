@@ -6,14 +6,14 @@
     "name": "abha",
     "library": [
       {
-        "_id": "efv_canon_v1_ebook",
+        "_id": "efv_v1_ebook",
         "title": "EFV™ VOL 1: The Origin Code (E-Book)",
         "type": "EBOOK",
         "price": 149,
         "filePath": "ebooks/efv-checklist.pdf"
       },
       {
-        "_id": "efv_canon_v1_audio",
+        "_id": "efv_v1_audiobook",
         "title": "EFV™ VOL 1: The Origin Code (Audiobook)",
         "type": "AUDIOBOOK",
         "price": 199,
@@ -23,12 +23,12 @@
     "createdAt": "2026-02-17T10:49:35.156Z",
     "updatedAt": "2026-02-17T11:14:09.809Z",
     "progress": {
-      "efv_canon_v1_ebook": {
+      "efv_v1_ebook": {
         "page": 3,
         "total": 0,
         "lastUpdated": "2026-02-17T10:57:53.591Z"
       },
-      "efv_canon_v1_audio": {
+      "efv_v1_audiobook": {
         "page": 19.364066,
         "total": 98.586063,
         "lastUpdated": "2026-02-17T11:14:09.806Z"
@@ -42,14 +42,14 @@
     "name": "aditi",
     "library": [
       {
-        "_id": "efv_canon_v1_audio",
+        "_id": "efv_v1_audiobook",
         "title": "EFV™ VOL 1: The Origin Code (Audiobook)",
         "type": "AUDIOBOOK",
         "price": 199,
         "filePath": "audiobooks/efv-audio.mp3"
       },
       {
-        "_id": "efv_canon_v1_ebook",
+        "_id": "efv_v1_ebook",
         "title": "EFV™ VOL 1: The Origin Code (E-Book)",
         "type": "EBOOK",
         "price": 149,
@@ -58,5 +58,55 @@
     ],
     "createdAt": "2026-02-18T05:48:08.256Z",
     "updatedAt": "2026-02-18T05:48:27.433Z"
+  },
+  {
+    "id": "nehalakhera04@gmail.com",
+    "_id": "nehalakhera04@gmail.com",
+    "email": "nehalakhera04@gmail.com",
+    "name": "nehalakhera04",
+    "library": [
+      {
+        "_id": "efv_v1_audiobook",
+        "title": "EFV™ VOL 1: The Origin Code (Audiobook)",
+        "type": "AUDIOBOOK",
+        "price": 199,
+        "filePath": "audiobooks/efv-audio.mp3",
+        "thumbnail": "https://via.placeholder.com/300x450/1a1a2e/d4af37?text=EFV+VOL+1+Audio",
+        "category": "Digital",
+        "description": "The standard audiobook version of Volume 1.",
+        "stock": 9999,
+        "volume": 1,
+        "author": "EFV Team",
+        "language": "English",
+        "createdAt": "2026-02-14T09:04:00.689Z",
+        "updatedAt": "2026-02-14T09:04:00.694Z"
+      }
+    ],
+    "createdAt": "2026-02-18T08:15:17.047Z",
+    "updatedAt": "2026-02-18T08:15:17.047Z"
+  },
+  {
+    "id": "admin@uwo24.com",
+    "_id": "admin@uwo24.com",
+    "email": "admin@uwo24.com",
+    "name": "admin",
+    "library": [
+      {
+        "_id": "efv_v1_audiobook",
+        "title": "EFV™ VOL 1: The Origin Code (Audiobook)",
+        "type": "AUDIOBOOK",
+        "price": 199,
+        "filePath": "audiobooks/efv-audio.mp3"
+      },
+      {
+        "_id": "efv_v1_ebook",
+        "title": "EFV™ VOL 1: The Origin Code (E-Book)",
+        "type": "EBOOK",
+        "price": 149,
+        "filePath": "ebooks/efv-checklist.pdf"
+      }
+    ],
+    "createdAt": "2026-02-18T10:32:24.764Z",
+    "updatedAt": "2026-02-18T10:32:38.203Z"
   }
 ]

@@ -1,35 +1,87 @@
 const jwt = require('jsonwebtoken');
-const { User, Purchase } = require('../models');
+const { User, Purchase, DigitalLibrary } = require('../models');
+const fs = require('fs');
+const path = require('path');
+
+const logFile = path.join(__dirname, '..', 'data', 'auth_debug.log');
+const debugLog = (msg) => {
+    const timestamp = new Date().toISOString();
+    fs.appendFileSync(logFile, `[${timestamp}] ${msg}\n`);
+};
 
 const protect = async (req, res, next) => {
-    let token = req.headers.authorization?.split(' ')[1];
+    let token = req.headers.authorization?.split(' ')[1] || req.query.token;
 
     if (!token) return res.status(401).json({ message: 'No token provided' });
 
     try {
         const decoded = jwt.verify(token, process.env.JWT_SECRET || 'secret123');
         req.user = await User.findById(decoded.id);
-        if (req.user && req.user.password) delete req.user.password; // Manually remove password for safety
-        if (!req.user) return res.status(404).json({ message: 'User not found' });
+        if (req.user && req.user.password) delete req.user.password;
+
+        if (!req.user) {
+            debugLog(`PROTECT FAIL: User ID ${decoded.id} not found in DB`);
+            return res.status(404).json({ message: 'User not found' });
+        }
+
+        debugLog(`PROTECT SUCCESS: User ${req.user.email} (${req.user.role || 'no-role'})`);
         next();
     } catch (error) {
+        debugLog(`PROTECT ERROR: ${error.message}`);
         res.status(401).json({ message: 'Unauthorized, token expired or invalid' });
     }
 };
 
 const validatePurchase = async (req, res, next) => {
     const { productId } = req.params;
+
+    if (!req.user) {
+        debugLog(`VALIDATE FAIL: req.user is missing`);
+        return res.status(401).json({ message: 'User authentication failed' });
+    }
+
+    const userId = req.user._id || req.user.id;
+    const userEmail = req.user.email;
+    const userRole = req.user.role;
+
+    debugLog(`VALIDATING: User=${userEmail}, Role=${userRole}, Product=${productId}`);
+
     try {
+        // 1. Admin bypass
+        if (userRole === 'admin' || (userEmail && userEmail.toLowerCase() === 'admin@uwo24.com')) {
+            debugLog(`GRANT: Admin Bypass for ${userEmail}`);
+            return next();
+        }
+
+        // 2. Check Purchase History
         const purchase = await Purchase.findOne({
-            userId: req.user._id,
+            userId: userId,
             productId: productId
         });
 
-        if (!purchase) {
-            return res.status(403).json({ message: 'Access denied: Content not purchased' });
+        if (purchase) {
+            debugLog(`GRANT: Purchase found for ${userEmail} -> ${productId}`);
+            return next();
         }
-        next();
+
+        // 3. Digital Library
+        const library = await DigitalLibrary.findOne({ userId: userId });
+        if (library && library.items) {
+            const hasAccess = library.items.some(item => {
+                const itemProdId = item.productId || item.id || item._id;
+                return itemProdId && itemProdId.toString() === productId.toString();
+            });
+
+            if (hasAccess) {
+                debugLog(`GRANT: Library entry found for ${userEmail} -> ${productId}`);
+                return next();
+            }
+        }
+
+        debugLog(`DENY: ${userEmail} does not own ${productId}`);
+        return res.status(403).json({ message: 'Access denied: Content not purchased [REFRESH_REQUIRED]' });
     } catch (error) {
+        debugLog(`ERROR: ${error.message}`);
         res.status(500).json({ message: 'Server error during validation' });
     }
 };

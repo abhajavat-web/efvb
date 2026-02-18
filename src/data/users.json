@@ -1,10 +1,27 @@
 [
   {
+    "name": "Super Admin",
+    "email": "admin@uwo24.com",
+    "password": "$2a$10$9Pjzsy5YwkG2p38Up1HIZed0GE1suTQylPovVLuM1rsnbvOlMFcea",
+    "role": "admin",
+    "_id": "admin_user_001",
+    "createdAt": "2026-02-18T08:30:00.000Z",
+    "updatedAt": "2026-02-18T08:30:00.000Z"
+  },
+  {
     "name": "abha",
     "email": "abha@uwo24.com",
     "password": "$2a$10$9Uc96JTTFQe90lOS64GcOODSOo2vWcHqZrdzTcZMpYrjhbOQF1yiy",
     "_id": "mlrnq3u492vak53seqk",
     "createdAt": "2026-02-18T06:34:35.116Z",
     "updatedAt": "2026-02-18T06:34:35.116Z"
+  },
+  {
+    "name": "neha",
+    "email": "nehalakhera04@gmail.com",
+    "password": "$2a$10$DGSA5dUM4skP4vN5eLrmuuWdXbPTo054q/VpqlqIicpUgaFZJjBEO",
+    "_id": "mlrqy21h6udeg0sdry",
+    "createdAt": "2026-02-18T08:04:44.885Z",
+    "updatedAt": "2026-02-18T08:04:44.885Z"
   }
 ]

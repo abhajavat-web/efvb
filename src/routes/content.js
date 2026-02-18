@@ -7,6 +7,25 @@ const { Product } = require('../models');
 const fs = require('fs');
 const path = require('path');
 
+const getMimeType = (filePath) => {
+    const ext = path.extname(filePath).toLowerCase();
+    const map = {
+        '.pdf': 'application/pdf',
+        '.epub': 'application/epub+zip',
+        '.mp3': 'audio/mpeg',
+        '.mpeg': 'audio/mpeg',
+        '.wav': 'audio/wav',
+        '.aac': 'audio/aac',
+        '.m4a': 'audio/mp4',
+        '.mp4': 'video/mp4',
+        '.ogg': 'audio/ogg',
+        '.flac': 'audio/flac',
+        '.txt': 'text/plain',
+        '.html': 'text/html'
+    };
+    return map[ext] || 'application/octet-stream';
+};
+
 // Secure E-Book Streaming
 router.get('/ebook/:productId', protect, validatePurchase, async (req, res) => {
     try {
@@ -18,24 +37,19 @@ router.get('/ebook/:productId', protect, validatePurchase, async (req, res) => {
         const privateStore = path.join(__dirname, '../../private-storage');
         const fullPath = path.resolve(privateStore, product.filePath);
 
-        if (!fs.existsSync(fullPath)) {
-            return res.status(404).json({ message: 'Content file not found' });
-        }
+        if (!fs.existsSync(fullPath)) return res.status(404).json({ message: 'File not found' });
 
-        res.setHeader('Content-Type', 'application/pdf');
+        res.setHeader('Content-Type', getMimeType(product.filePath));
         res.setHeader('Content-Disposition', 'inline');
-        res.setHeader('Cache-Control', 'no-store, no-cache, must-revalidate, private');
-        res.setHeader('X-Content-Type-Options', 'nosniff');
+        res.setHeader('Cache-Control', 'no-store');
 
-        const stream = fs.createReadStream(fullPath);
-        stream.pipe(res);
+        fs.createReadStream(fullPath).pipe(res);
     } catch (error) {
-        console.error('E-book streaming error:', error);
-        res.status(500).json({ message: 'Error streaming E-book content' });
+        res.status(500).json({ message: 'Streaming error' });
     }
 });
 
-// Secure Audiobook Streaming (Range-based for premium player experience)
+// Secure Audiobook Streaming
 router.get('/audio/:productId', protect, validatePurchase, async (req, res) => {
     try {
         const product = await Product.findById(req.params.productId);
@@ -46,13 +60,12 @@ router.get('/audio/:productId', protect, validatePurchase, async (req, res) => {
         const privateStore = path.join(__dirname, '../../private-storage');
         const fullPath = path.resolve(privateStore, product.filePath);
 
-        if (!fs.existsSync(fullPath)) {
-            return res.status(404).json({ message: 'Audio file not found' });
-        }
+        if (!fs.existsSync(fullPath)) return res.status(404).json({ message: 'Audio file not found' });
 
         const stat = fs.statSync(fullPath);
         const fileSize = stat.size;
         const range = req.headers.range;
+        const mimeType = getMimeType(product.filePath);
 
         if (range) {
             const parts = range.replace(/bytes=/, "").split("-");
@@ -61,27 +74,24 @@ router.get('/audio/:productId', protect, validatePurchase, async (req, res) => {
             const chunksize = (end - start) + 1;
             const file = fs.createReadStream(fullPath, { start, end });
 
-            const head = {
+            res.writeHead(206, {
                 'Content-Range': `bytes ${start}-${end}/${fileSize}`,
                 'Accept-Ranges': 'bytes',
                 'Content-Length': chunksize,
-                'Content-Type': 'audio/mpeg',
-                'Cache-Control': 'no-store, no-cache, must-revalidate, private',
-            };
-            res.writeHead(206, head);
+                'Content-Type': mimeType,
+                'Cache-Control': 'no-store'
+            });
             file.pipe(res);
         } else {
-            const head = {
+            res.writeHead(200, {
                 'Content-Length': fileSize,
-                'Content-Type': 'audio/mpeg',
-                'Cache-Control': 'no-store, no-cache, must-revalidate, private',
-            };
-            res.writeHead(200, head);
+                'Content-Type': mimeType,
+                'Cache-Control': 'no-store'
+            });
             fs.createReadStream(fullPath).pipe(res);
         }
     } catch (error) {
-        console.error('Audio streaming error:', error);
-        res.status(500).json({ message: 'Error streaming audio content' });
+        res.status(500).json({ message: 'Audio streaming error' });
     }
 });
 

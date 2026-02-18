@@ -1,109 +1,141 @@
 const JsonDB = require('../utils/jsonDB');
 
+/**
+ * Enhanced JSON Model Adapter to mimic Mongoose behavior.
+ * Returns a Query-like object for chaining (.populate, .sort, etc.)
+ */
 class JsonModel {
-    constructor(filename) {
-        this.db = new JsonDB(filename);
-    }
+    static _attachSave(obj, dbInstance) {
+        if (!obj) return null;
+        if (Array.isArray(obj)) {
+            return obj.map(item => JsonModel._attachSave(item, dbInstance));
+        }
 
-    async find(query = {}) {
-        const data = this.db.getAll();
-        if (Object.keys(query).length === 0) return data;
-
-        return data.filter(item => {
-            return Object.entries(query).every(([key, value]) => item[key] == value);
+        Object.defineProperty(obj, 'save', {
+            value: async function () {
+                const id = this._id || this.id;
+                if (id) {
+                    return dbInstance.update(id, this);
+                } else {
+                    const created = dbInstance.create(this);
+                    Object.assign(this, created);
+                    return this;
+                }
+            },
+            enumerable: false,
+            writable: true,
+            configurable: true
         });
+        return obj;
     }
 
-    async findOne(query) {
-        const results = await this.find(query);
-        return results[0] || null;
-    }
+    static createModel(filename) {
+        const db = new JsonDB(filename);
 
-    async findById(id) {
-        return this.db.getById(id.toString());
-    }
-
-    async findByIdAndUpdate(id, updates, options = {}) {
-        return this.db.update(id.toString(), updates);
-    }
-
-    async findByIdAndDelete(id) {
-        const item = await this.findById(id);
-        if (item) {
-            this.db.delete(id.toString());
-            return item;
+        class Query {
+            constructor(results) {
+                this.results = results;
+            }
+            populate() { return this; }
+            sort() { return this; }
+            limit() { return this; }
+            select() { return this; }
+            skip() { return this; }
+            lean() { return this; }
+            async exec() { return this.results; }
+            // Support thenable (await query)
+            then(resolve, reject) {
+                return Promise.resolve(this.results).then(resolve, reject);
+            }
         }
-        return null;
-    }
 
-    async findOneAndUpdate(query, updates, options = {}) {
-        console.log('[JSON_ADAPTER] findOneAndUpdate called');
-        console.log('[JSON_ADAPTER] Query:', JSON.stringify(query));
+        return class ModelInstance {
+            constructor(data = {}) {
+                Object.assign(this, data);
+                JsonModel._attachSave(this, db);
+            }
 
-        let item = await this.findOne(query);
+            static find(query = {}) {
+                const data = db.getAll();
+                let results = data;
+                if (Object.keys(query).length > 0) {
+                    results = data.filter(item => {
+                        return Object.entries(query).every(([key, value]) => {
+                            if (value instanceof RegExp) return value.test(item[key]);
+                            return item[key] == value;
+                        });
+                    });
+                }
+                const attached = JsonModel._attachSave(results, db);
+                return new Query(attached);
+            }
 
-        if (item) {
-            console.log('[JSON_ADAPTER] Found existing item:', item._id);
-            // Update existing
-            const updatedItem = { ...item, ...updates, lastUpdated: new Date().toISOString() };
-            const result = await this.db.update(item.id || item._id, updatedItem);
-            console.log('[JSON_ADAPTER] Update existing result:', result ? 'Success' : 'Failed');
-            return updatedItem;
-        } else if (options.upsert) {
-            console.log('[JSON_ADAPTER] Item not found. Upserting...');
-            // Create New
-            const newItem = { ...query, ...updates, lastUpdated: new Date().toISOString() };
-            const created = await this.create(newItem);
-            console.log('[JSON_ADAPTER] Created new item:', created);
-            return created;
-        }
-        return null;
-    }
+            static async findOne(query) {
+                const q = this.find(query);
+                const results = await q.exec();
+                return results[0] || null;
+            }
 
-    async create(data) {
-        // Handle Mongoose-style object creation
-        const item = Array.isArray(data) ? data[0] : data;
-        return this.db.create(item);
-    }
+            static async findById(id) {
+                if (!id) return null;
+                const item = db.getById(id.toString());
+                return JsonModel._attachSave(item, db);
+            }
 
-    async deleteMany(query = {}) {
-        if (Object.keys(query).length === 0) {
-            this.db.write([]);
-            return { deletedCount: 'all' };
-        }
-        // Basic filtering for deleteMany if needed later
-        return { deletedCount: 0 };
+            static async findByIdAndUpdate(id, updates, options = {}) {
+                const updated = db.update(id.toString(), updates);
+                return JsonModel._attachSave(updated, db);
+            }
+
+            static async findOneAndUpdate(query, updates, options = {}) {
+                let item = await this.findOne(query);
+                if (item) {
+                    const updatedItem = { ...item, ...updates };
+                    const result = db.update(item._id || item.id, updatedItem);
+                    return JsonModel._attachSave(result, db);
+                } else if (options.upsert) {
+                    return this.create({ ...query, ...updates });
+                }
+                return null;
+            }
+
+            static async create(data) {
+                const items = Array.isArray(data) ? data : [data];
+                const createdItems = items.map(item => db.create(item));
+                const attached = JsonModel._attachSave(createdItems, db);
+                return Array.isArray(data) ? attached : attached[0];
+            }
+
+            static async deleteMany(query = {}) {
+                if (Object.keys(query).length === 0) {
+                    db.write([]);
+                    return { deletedCount: 'all' };
+                }
+                const data = db.getAll();
+                const filtered = data.filter(item => {
+                    return !Object.entries(query).every(([key, value]) => item[key] == value);
+                });
+                db.write(filtered);
+                return { deletedCount: data.length - filtered.length };
+            }
+
+            static async findByIdAndDelete(id) {
+                const item = await this.findById(id);
+                if (item) {
+                    db.delete(id.toString());
+                    return item;
+                }
+                return null;
+            }
+        };
     }
 }
 
-// Wrap models to support .populate() etc. with no-ops or simple logic
-const createMockModel = (filename) => {
-    const model = new JsonModel(filename);
-
-    // Proxy to handle .populate(), .select(), .sort() etc which return 'this' in Mongoose
-    return new Proxy(model, {
-        get(target, prop) {
-            if (prop === 'populate' || prop === 'select' || prop === 'sort') {
-                return function () {
-                    // Return a promise that resolves to the data if it's the end of the chain
-                    // or the proxy itself if it's being chained.
-                    // For simplicity, we'll just mock the common usage: result = await Model.find().populate()
-                    const originalMethod = target[prop];
-                    if (typeof originalMethod === 'function') {
-                        return originalMethod.apply(target, arguments);
-                    }
-                    return this; // Chainable no-op
-                };
-            }
-            return target[prop];
-        }
-    });
-};
-
 module.exports = {
-    User: createMockModel('users.json'),
-    Product: createMockModel('products.json'),
-    Purchase: createMockModel('orders.json'), // Reusing orders for purchases for now
-    Order: createMockModel('orders.json'),
-    UserProgress: createMockModel('progress.json')
+    User: JsonModel.createModel('users.json'),
+    Product: JsonModel.createModel('products.json'),
+    Purchase: JsonModel.createModel('purchases.json'),
+    Order: JsonModel.createModel('orders.json'),
+    UserProgress: JsonModel.createModel('progress.json'),
+    DigitalLibrary: JsonModel.createModel('digital_library.json')
 };

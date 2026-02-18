@@ -20,14 +20,14 @@ global.demoUsers = new Map(); // email -> { name, email, library: [] }
 global.demoProgress = new Map(); // userId+productId -> { progress, total, lastUpdated }
 global.demoProducts = [
     {
-        _id: 'efv_canon_v1_audio',
+        _id: 'efv_v1_audiobook',
         title: 'EFV™ VOL 1: The Origin Code (Audiobook)',
         type: 'AUDIOBOOK',
         price: 199,
         filePath: 'audiobooks/efv-audio.mp3'
     },
     {
-        _id: 'efv_canon_v1_ebook',
+        _id: 'efv_v1_ebook',
         title: 'EFV™ VOL 1: The Origin Code (E-Book)',
         type: 'EBOOK',
         price: 149,
@@ -47,6 +47,15 @@ app.use('/api/progress', require('./routes/progress'));
 app.use('/api/upload', require('./routes/upload'));
 
 app.use('/src/uploads', express.static(path.join(__dirname, 'uploads')));
+
+// Global Error Handler
+app.use((err, req, res, next) => {
+    console.error('SERVER ERROR:', err);
+    res.status(err.status || 500).json({
+        message: err.message || 'Internal Server Error',
+        error: process.env.NODE_ENV === 'development' ? err : {}
+    });
+});
 
 const PORT = process.env.PORT || 5000;
 

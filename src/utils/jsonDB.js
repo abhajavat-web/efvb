@@ -33,6 +33,7 @@ class JsonDB {
     write(data) {
         try {
             fs.writeFileSync(this.filepath, JSON.stringify(data, null, 2));
+            console.log(`💾 JSON DB WRITE SUCCESS: ${path.basename(this.filepath)} (${data.length} items)`);
             return true;
         } catch (error) {
             console.error(`Error writing to ${this.filepath}:`, error);
