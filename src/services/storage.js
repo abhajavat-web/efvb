@@ -6,12 +6,11 @@ const path = require('path');
  * In production, this would interface with AWS S3 or similar.
  */
 const getFileStream = (filePath) => {
-    // SECURITY: Ensure the path is within the designated private-storage folder
-    // to prevent directory traversal attacks.
-    const privateStore = path.join(__dirname, '../../private-storage');
-    const fullPath = path.resolve(privateStore, filePath);
+    // Base storage is EFV-Backend/src
+    const uploadStore = path.join(__dirname, '../');
+    const fullPath = path.resolve(uploadStore, filePath);
 
-    if (!fullPath.startsWith(path.resolve(privateStore))) {
+    if (!fullPath.startsWith(path.resolve(uploadStore))) {
         throw new Error('Unauthorized storage access attempt');
     }
 

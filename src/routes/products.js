@@ -29,14 +29,20 @@ router.get('/:id', async (req, res) => {
 // Create Product (Admin Only)
 router.post('/', adminAuth, async (req, res) => {
     try {
-        const { title, price, type, filePath, description, thumbnail, stock, discount, category, language, volume } = req.body;
+        const {
+            title, author, price, discountPrice, type, filePath,
+            description, thumbnail, gallery, stock, discount,
+            category, language, volume, weight, length, breadth, height, duration
+        } = req.body;
 
         if (!title || !price || !type) {
             return res.status(400).json({ message: 'Title, Price, and Type are required' });
         }
 
         const product = await Product.create({
-            title, price, type, filePath, description, thumbnail, stock, discount, category, language, volume
+            title, author, price, discountPrice, type, filePath,
+            description, thumbnail, gallery, stock, discount,
+            category, language, volume, weight, length, breadth, height, duration
         });
 
         console.log('📝 Created Product to DB:', product._id);
@@ -82,22 +88,23 @@ router.put('/:id', adminAuth, async (req, res) => {
             return res.status(404).json({ message: 'Product not found' });
         }
 
-        // Also update admin's library entry if it exists to reflect new filePath/thumbnail
+        // GLOBAL SYNC: Update this product in EVERY user's digital library
         if (product.type === 'EBOOK' || product.type === 'AUDIOBOOK') {
             try {
-                let library = await DigitalLibrary.findOne({ userId: req.user._id });
-                if (library) {
-                    const itemIndex = library.items.findIndex(item => item.productId.toString() === product._id.toString());
-                    if (itemIndex > -1) {
-                        library.items[itemIndex].title = product.title;
-                        library.items[itemIndex].thumbnail = product.thumbnail;
-                        library.items[itemIndex].filePath = product.filePath;
-                        library.items[itemIndex].type = product.type === 'AUDIOBOOK' ? 'Audiobook' : 'E-Book';
-                        await library.save();
+                const syncResult = await DigitalLibrary.updateMany(
+                    { "items.productId": product._id },
+                    {
+                        $set: {
+                            "items.$.title": product.title,
+                            "items.$.thumbnail": product.thumbnail,
+                            "items.$.filePath": product.filePath,
+                            "items.$.type": product.type === 'AUDIOBOOK' ? 'Audiobook' : 'E-Book'
+                        }
                     }
-                }
-            } catch (libErr) {
-                console.error('Error updating admin library item:', libErr);
+                );
+                console.log(`🌐 Global Library Sync: Updated ${syncResult.modifiedCount} users for product ${product._id}`);
+            } catch (syncErr) {
+                console.error('❌ Global library sync error:', syncErr);
             }
         }
 

@@ -5,7 +5,7 @@ if (process.env.USE_JSON_DB === 'true') {
     return;
 }
 
-// Updated User Schema with profile details
+// Updated User Schema with professional dashboard features
 const userSchema = new mongoose.Schema({
     name: { type: String, required: true },
     email: { type: String, required: true, unique: true },
@@ -13,31 +13,59 @@ const userSchema = new mongoose.Schema({
     role: { type: String, enum: ['user', 'admin'], default: 'user' },
     phone: String,
     savedAddresses: [{
-        label: String, // e.g., "Home", "Office"
-        address: String,
+        fullName: String,
+        phone: String,
+        pincode: String,
+        state: String,
         city: String,
-        zip: String,
-        country: String
+        fullAddress: String,
+        landmark: String,
+        isDefault: { type: Boolean, default: false },
+        label: { type: String, default: 'Home' } // Home, Office, etc.
+    }],
+    wishlist: [{ type: mongoose.Schema.Types.ObjectId, ref: 'Product' }],
+    notifications: [{
+        title: String,
+        message: String,
+        type: { type: String, enum: ['Order', 'Payment', 'Digital', 'Shipment', 'General'], default: 'General' },
+        link: String,
+        isRead: { type: Boolean, default: false },
+        createdAt: { type: Date, default: Date.now }
     }],
     paymentMethods: [{
         type: { type: String, default: 'card' },
         last4: String,
         brand: String
     }],
+    resetPasswordOTP: String,
+    resetPasswordExpires: Date,
+    resetAttempts: { type: Number, default: 0 },
     createdAt: { type: Date, default: Date.now }
 });
 
 const productSchema = new mongoose.Schema({
     title: { type: String, required: true },
+    author: { type: String, default: "EFV Authorized Member" },
     type: { type: String, enum: ['EBOOK', 'AUDIOBOOK', 'PAPERBACK', 'HARDCOVER'], required: true },
     price: { type: Number, required: true },
-    discount: { type: Number, default: 0 },
+    discountPrice: { type: Number }, // Actual selling price if discounted
+    discount: { type: Number, default: 0 }, // Percentage or absolute discount
     stock: { type: Number, default: 0 },
-    filePath: { type: String }, // Optional for physical books
+    filePath: { type: String }, // Optional for physical books (PDF/Audio)
     thumbnail: String,
-    category: String,
+    gallery: [String], // Array of image paths
+    category: { type: String, default: 'Digital' },
     description: String,
-    volume: String // e.g. "1", "2"
+    volume: String, // e.g. "1", "2"
+
+    // Shipping Details (for Shiprocket)
+    weight: { type: Number, default: 0 }, // in grams
+    length: { type: Number, default: 0 }, // in cm
+    breadth: { type: Number, default: 0 }, // in cm
+    height: { type: Number, default: 0 }, // in cm
+    duration: String, // e.g. "12:35" for audiobooks
+
+    createdAt: { type: Date, default: Date.now }
 });
 
 // New Cart Schema
@@ -92,6 +120,8 @@ const orderSchema = new mongoose.Schema({
         type: String
     }],
     totalAmount: { type: Number, required: true },
+    shippingCharges: { type: Number, default: 0 },
+    discountAmount: { type: Number, default: 0 },
     paymentMethod: { type: String, default: 'COD' },
     status: {
         type: String,
@@ -103,11 +133,45 @@ const orderSchema = new mongoose.Schema({
     razorpayPaymentId: String,
     razorpaySignature: String,
     invoicePath: String, // Path to generated PDF invoice
+    shipmentId: String, // Shiprocket Shipment ID
     timeline: [{
         status: String,
         timestamp: { type: Date, default: Date.now },
         note: String
     }],
+    createdAt: { type: Date, default: Date.now }
+});
+
+const paymentSchema = new mongoose.Schema({
+    orderId: { type: String, required: true },
+    paymentId: String, // Razorpay Payment ID
+    amount: { type: Number, required: true },
+    method: String, // Card, UPI, etc.
+    status: { type: String, enum: ['Paid', 'Failed', 'Pending', 'Refunded'], default: 'Pending' },
+    razorpayData: Object, // Full response for auditing
+    date: { type: Date, default: Date.now }
+});
+
+const shipmentSchema = new mongoose.Schema({
+    orderId: { type: String, required: true, unique: true },
+    shipmentId: String, // Courier/Shiprocket ID
+    courierName: { type: String, default: '' },
+    awbNumber: { type: String, default: '' },
+    shippingStatus: { type: String, default: 'Pending' },
+    trackingLink: String,
+    labelUrl: String,
+    createdAt: { type: Date, default: Date.now }
+});
+
+const couponSchema = new mongoose.Schema({
+    code: { type: String, required: true, unique: true },
+    type: { type: String, enum: ['Percentage', 'Flat'], default: 'Percentage' },
+    value: { type: Number, required: true },
+    minOrder: { type: Number, default: 0 },
+    expiryDate: Date,
+    usageLimit: { type: Number, default: 100 },
+    usedCount: { type: Number, default: 0 },
+    isActive: { type: Boolean, default: true },
     createdAt: { type: Date, default: Date.now }
 });
 
@@ -138,5 +202,8 @@ module.exports = {
     Order: mongoose.model('Order', orderSchema),
     Cart: mongoose.model('Cart', cartSchema),
     DigitalLibrary: mongoose.model('DigitalLibrary', digitalLibrarySchema),
-    UserProgress: mongoose.model('UserProgress', userProgressSchema)
+    UserProgress: mongoose.model('UserProgress', userProgressSchema),
+    Payment: mongoose.model('Payment', paymentSchema),
+    Shipment: mongoose.model('Shipment', shipmentSchema),
+    Coupon: mongoose.model('Coupon', couponSchema)
 };

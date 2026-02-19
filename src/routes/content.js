@@ -17,10 +17,13 @@ const getMimeType = (filePath) => {
         '.wav': 'audio/wav',
         '.aac': 'audio/aac',
         '.m4a': 'audio/mp4',
-        '.mp4': 'video/mp4',
+        '.mp4': 'audio/mp4', // Common for audiobooks in mp4 container
+        '.m4v': 'video/mp4',
         '.ogg': 'audio/ogg',
         '.flac': 'audio/flac',
         '.txt': 'text/plain',
+        '.doc': 'application/msword',
+        '.docx': 'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
         '.html': 'text/html'
     };
     return map[ext] || 'application/octet-stream';
@@ -34,8 +37,8 @@ router.get('/ebook/:productId', protect, validatePurchase, async (req, res) => {
             return res.status(404).json({ message: 'E-Book not found' });
         }
 
-        const privateStore = path.join(__dirname, '../../private-storage');
-        const fullPath = path.resolve(privateStore, product.filePath);
+        const uploadStore = path.join(__dirname, '../'); // Points to EFV-Backend/src
+        const fullPath = path.resolve(uploadStore, product.filePath);
 
         if (!fs.existsSync(fullPath)) return res.status(404).json({ message: 'File not found' });
 
@@ -57,8 +60,8 @@ router.get('/audio/:productId', protect, validatePurchase, async (req, res) => {
             return res.status(404).json({ message: 'Audiobook not found' });
         }
 
-        const privateStore = path.join(__dirname, '../../private-storage');
-        const fullPath = path.resolve(privateStore, product.filePath);
+        const uploadStore = path.join(__dirname, '../'); // Points to EFV-Backend/src
+        const fullPath = path.resolve(uploadStore, product.filePath);
 
         if (!fs.existsSync(fullPath)) return res.status(404).json({ message: 'Audio file not found' });
 

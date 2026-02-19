@@ -2,7 +2,19 @@ const express = require('express');
 const router = express.Router();
 const { Order, Product, User, DigitalLibrary } = require('../models');
 const adminAuth = require('../middleware/adminAuth');
+const { protect } = require('../middleware/auth');
 const { createRazorpayOrder, verifyPaymentSignature } = require('../utils/razorpay');
+
+
+// Get current user's orders
+router.get('/my-orders', protect, async (req, res) => {
+    try {
+        const orders = await Order.find({ "customer.email": req.user.email }).sort({ createdAt: -1 });
+        res.json(orders);
+    } catch (error) {
+        res.status(500).json({ message: 'Error fetching orders' });
+    }
+});
 
 // Get all orders (Admin Only)
 router.get('/', adminAuth, async (req, res) => {
@@ -206,16 +218,158 @@ router.put('/:id/status', adminAuth, async (req, res) => {
     }
 });
 
-// Track Order (Public)
+// Track Order (Public/User)
 router.get('/track/:id', async (req, res) => {
     try {
-        const order = await Order.findOne({ orderId: req.params.id });
+        const order = await Order.findOne({ orderId: req.params.id }) || await Order.findById(req.params.id);
         if (!order) {
             return res.status(404).json({ message: 'Order not found' });
         }
         res.json(order);
     } catch (error) {
         res.status(500).json({ message: 'Error tracking order' });
+    }
+});
+
+// --- NEW: TEST MODE DIGITAL PURCHASE ---
+// Directly creates an order as PAID and Adds to Library
+router.post('/test-digital', protect, async (req, res) => {
+    try {
+        const { productId, price, name, type } = req.body; // type should be 'EBOOK' or 'AUDIOBOOK'
+        const user = await User.findById(req.user._id);
+
+        if (!user) return res.status(404).json({ success: false, message: 'User not found' });
+
+        // 1. Find Product
+        // IMPORTANT: In JSON DB mode, IDs are strings like 'efv_v1_ebook'.
+        // mongoose.Types.ObjectId.isValid() returns FALSE for these, so we CANNOT
+        // use that check as a gate. Try findById for ALL productIds first.
+        let product = null;
+
+        // Step 1a: Try direct ID lookup (works for both string and ObjectId formats)
+        product = await Product.findById(productId.toString());
+
+        // Step 1b: If not found, try demoMap with simple string matching (JSON-safe)
+        if (!product) {
+            // Simple mapping: productId -> { type, titleFragment }
+            const demoMap = {
+                'efv_v1_ebook': { type: 'EBOOK', titleFragment: 'ORIGIN CODE' },
+                'efv_v1_audiobook': { type: 'AUDIOBOOK', titleFragment: 'ORIGIN CODE' },
+                'efv_v1_ebook_en': { type: 'EBOOK', titleFragment: 'THE ORIGIN CODE' },
+                'efv_v1_audiobook_en': { type: 'AUDIOBOOK', titleFragment: 'THE ORIGIN CODE' },
+                'efv_v2_ebook': { type: 'EBOOK', titleFragment: 'MINDOS' },
+                'efv_v2_audiobook': { type: 'AUDIOBOOK', titleFragment: 'MINDOS' }
+            };
+
+            const spec = demoMap[productId];
+            if (spec) {
+                // JSON adapter supports regex in find(), use it
+                product = await Product.findOne({
+                    title: new RegExp(spec.titleFragment, 'i'),
+                    type: spec.type
+                });
+            }
+        }
+
+        // Step 1c: Last resort - search by name sent from frontend
+        if (!product && name) {
+            product = await Product.findOne({ title: new RegExp(name.replace(/[™®]/g, '').trim(), 'i'), type: type });
+        }
+
+        if (!product) {
+            console.error(`❌ Product not found for ID: ${productId}, name: ${name}, type: ${type}`);
+            return res.status(404).json({ success: false, message: `Product not found: ${productId}` });
+        }
+
+        console.log(`✅ Product found: ${product.title} (${product.type}) ID: ${product._id}`);
+
+
+        // 2. Create Order (Simulate Paid)
+        const orderId = 'ORD-TEST-' + Date.now().toString().slice(-6);
+        const newOrder = await Order.create({
+            orderId: orderId,
+            customer: {
+                name: user.name,
+                email: user.email,
+                phone: user.phone || '0000000000',
+                address: { street: 'Digital Purchase', city: 'Internet', zip: '000000' }
+            },
+            items: [{
+                productId: product._id,
+                title: product.title,
+                type: product.type, // Ensure DB type is used (EBOOK/AUDIOBOOK)
+                price: price || product.price,
+                quantity: 1
+            }],
+            totalAmount: price || product.price,
+            paymentMethod: 'DIGITAL_TEST',
+            paymentStatus: 'Paid',
+            status: 'Delivered', // Immediate delivery for digital
+            paymentId: 'DIG-' + orderId,
+            timeline: [{ status: 'Delivered', note: 'Digital Item Unlocked (Test Mode)' }]
+        });
+
+        // 3. Update User Profile (Add to purchasedProducts)
+        // Check if `purchasedProducts` property exists (JsonAdapter compatibility)
+        if (!user.purchasedProducts) {
+            user.purchasedProducts = [];
+            await user.save(); // Initialize array
+        }
+
+        // Mongoose `addToSet` doesn't exist on POJO returned by JsonAdapter
+        // So we manually check and push
+        const prodIdStr = product._id.toString();
+
+        // If it's an array of strings (typical in JSON) or ObjectIds
+        const isAlreadyPurchased = user.purchasedProducts.some(id => id.toString() === prodIdStr);
+
+        if (!isAlreadyPurchased) {
+            user.purchasedProducts.push(prodIdStr);
+            await user.save();
+        }
+
+        // 4. Update Digital Library
+        let library = await DigitalLibrary.findOne({ userId: user._id.toString() });
+
+        if (!library) {
+            // Create new library entry for this user
+            library = await DigitalLibrary.create({
+                userId: user._id.toString(),
+                items: []
+            });
+        }
+
+        const alreadyInLib = (library.items || []).some(i =>
+            (i.productId || '').toString() === product._id.toString()
+        );
+
+        if (!alreadyInLib) {
+            // Push new library item
+            if (!library.items) library.items = [];
+            library.items.push({
+                productId: product._id.toString(),
+                title: product.title,
+                type: product.type === 'AUDIOBOOK' ? 'Audiobook' : 'E-Book',
+                thumbnail: product.thumbnail || 'img/vol1-cover.png',
+                filePath: product.filePath || '',
+                purchasedAt: new Date().toISOString()
+            });
+            await library.save();
+            console.log(`✅ Library updated for user ${user._id}: added ${product.title}`);
+        } else {
+            console.log(`ℹ️ Product already in library for user ${user._id}: ${product.title}`);
+        }
+
+        res.status(200).json({
+            success: true,
+            message: 'Test Purchase Successful',
+            orderId: newOrder.orderId,
+            libraryUpdated: true
+        });
+
+    } catch (error) {
+        console.error("Test Digital Purchase Error:", error);
+        res.status(500).json({ success: false, message: error.message });
     }
 });
 

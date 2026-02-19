@@ -45,8 +45,9 @@ app.use('/api/demo', require('./routes/demo'));
 app.use('/api/chat', require('./routes/chat'));
 app.use('/api/progress', require('./routes/progress'));
 app.use('/api/upload', require('./routes/upload'));
+app.use('/api/users', require('./routes/users'));
 
-app.use('/src/uploads', express.static(path.join(__dirname, 'uploads')));
+app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 
 // Global Error Handler
 app.use((err, req, res, next) => {
@@ -62,3 +63,5 @@ const PORT = process.env.PORT || 5000;
 app.listen(PORT, () => {
     console.log(`✅ Server running on port ${PORT}`);
 });
+
+

@@ -11,9 +11,9 @@ const storage = multer.diskStorage({
         if (file.fieldname === 'cover') {
             cb(null, path.join(rootDir, 'src/uploads/covers'));
         } else if (file.fieldname === 'ebook') {
-            cb(null, path.join(rootDir, 'private-storage/ebooks'));
+            cb(null, path.join(rootDir, 'src/uploads/ebooks'));
         } else if (file.fieldname === 'audio') {
-            cb(null, path.join(rootDir, 'private-storage/audiobooks'));
+            cb(null, path.join(rootDir, 'src/uploads/audios'));
         } else {
             cb({ message: 'Invalid field name' }, false);
         }
@@ -34,13 +34,17 @@ const upload = multer({
         const mime = file.mimetype.toLowerCase();
 
         if (file.fieldname === 'cover') {
-            const allowedExts = ['.jpg', '.jpeg', '.png', '.webp'];
+            const allowedExts = ['.jpg', '.jpeg', '.png', '.webp', '.gif', '.bmp'];
             if (allowedExts.includes(ext) || mime.startsWith('image/')) {
                 return cb(null, true);
             }
         } else if (file.fieldname === 'ebook') {
-            // Expanded for all document types: pdf, docx, epub, mobi, txt, html, etc.
-            const allowedExts = ['.pdf', '.doc', '.docx', '.txt', '.epub', '.mobi', '.html', '.rtf', '.odt'];
+            // Highly permissive document and ebook formats
+            const allowedExts = [
+                '.pdf', '.epub', '.mobi', '.doc', '.docx', '.txt',
+                '.rtf', '.odt', '.html', '.htm', '.azw', '.azw3',
+                '.fb2', '.djvu', '.prc', '.pages'
+            ];
             if (allowedExts.includes(ext) ||
                 mime.includes('pdf') ||
                 mime.includes('word') ||
@@ -48,13 +52,22 @@ const upload = multer({
                 mime.includes('epub') ||
                 mime.includes('mobi') ||
                 mime.includes('html') ||
-                mime.startsWith('application/octet-stream')) { // Fallback for some obscure ebook formats
+                mime.includes('document') || // Generic for many office docs
+                mime.startsWith('application/octet-stream') ||
+                mime.startsWith('application/x-')) { // Catch many specialized ebook mime types
                 return cb(null, true);
             }
         } else if (file.fieldname === 'audio') {
-            // Expanded for all audio types: mp3, wav, aac, flac, m4a, ogg, etc. + common video containers
-            const allowedExts = ['.mp3', '.mpeg', '.mp4', '.wav', '.aac', '.ogg', '.m4a', '.flac', '.wma', '.alac', '.opus'];
-            if (allowedExts.includes(ext) || mime.startsWith('audio/') || mime.startsWith('video/')) {
+            // Highly permissive audio and video containers (since video as audio is common)
+            const allowedExts = [
+                '.mp3', '.wav', '.m4a', '.aac', '.flac', '.ogg',
+                '.wma', '.alac', '.opus', '.aiff', '.amr', '.ape',
+                '.mp4', '.mpeg', '.mpg', '.m4v', '.webm', '.mkv', '.avi'
+            ];
+            if (allowedExts.includes(ext) ||
+                mime.startsWith('audio/') ||
+                mime.startsWith('video/') ||
+                mime === 'application/octet-stream') { // Some systems send mp3 as application/octet-stream
                 return cb(null, true);
             }
         }
@@ -73,9 +86,9 @@ router.post('/', adminAuth, upload.fields([
         const files = req.files;
         const responseIds = {};
 
-        if (files.cover) responseIds.coverPath = `src/uploads/covers/${files.cover[0].filename}`;
-        if (files.ebook) responseIds.ebookPath = `ebooks/${files.ebook[0].filename}`;
-        if (files.audio) responseIds.audioPath = `audiobooks/${files.audio[0].filename}`;
+        if (files.cover) responseIds.coverPath = `uploads/covers/${files.cover[0].filename}`;
+        if (files.ebook) responseIds.ebookPath = `uploads/ebooks/${files.ebook[0].filename}`;
+        if (files.audio) responseIds.audioPath = `uploads/audios/${files.audio[0].filename}`;
 
         console.log('✅ File Upload Success:', responseIds);
 

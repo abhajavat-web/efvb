@@ -11,10 +11,13 @@
   {
     "name": "abha",
     "email": "abha@uwo24.com",
-    "password": "$2a$10$9Uc96JTTFQe90lOS64GcOODSOo2vWcHqZrdzTcZMpYrjhbOQF1yiy",
+    "password": "$2a$10$Efv.K7OhxidNWXGwV29Gse7qieAm6f6KR30M9SL0SdbUMMIqpeDAy",
     "_id": "mlrnq3u492vak53seqk",
     "createdAt": "2026-02-18T06:34:35.116Z",
-    "updatedAt": "2026-02-18T06:34:35.116Z"
+    "updatedAt": "2026-02-19T10:25:48.717Z",
+    "resetPasswordOTP": null,
+    "resetPasswordExpires": null,
+    "resetAttempts": null
   },
   {
     "name": "neha",
@@ -23,5 +26,61 @@
     "_id": "mlrqy21h6udeg0sdry",
     "createdAt": "2026-02-18T08:04:44.885Z",
     "updatedAt": "2026-02-18T08:04:44.885Z"
+  },
+  {
+    "name": "aditi",
+    "email": "aditi@uwo24.com",
+    "password": "$2a$10$/PVfI.EETfYEtjIjLevskO6kViVSo5WFg4qdBo0jT92b9rXOadCUi",
+    "_id": "mlt058axclnz799ag4q",
+    "createdAt": "2026-02-19T05:10:02.313Z",
+    "updatedAt": "2026-02-19T11:16:29.601Z",
+    "resetPasswordOTP": null,
+    "resetPasswordExpires": null,
+    "resetAttempts": null
+  },
+  {
+    "name": "devansh",
+    "email": "devansh@uwo24.com",
+    "password": "$2a$10$P.hJpdElm6Y1SsEOZTEBhuMn4ICbIehPFFFh5RtTZTkUDC2TdSoLi",
+    "_id": "mlt3pyymild20mav7n",
+    "createdAt": "2026-02-19T06:50:08.830Z",
+    "updatedAt": "2026-02-19T06:50:08.830Z"
+  },
+  {
+    "name": "dev",
+    "email": "devansh1@gmail.com",
+    "password": "$2a$10$G6li8OcA2LAohWWvz6DtZeobTQiX1b5v3/qwcrbaGl28DtpxaIvkG",
+    "_id": "mlt3xccbr4w5rafjc6o",
+    "createdAt": "2026-02-19T06:55:52.763Z",
+    "updatedAt": "2026-02-19T08:16:59.699Z",
+    "purchasedProducts": [
+      "efv_v1_ebook"
+    ]
+  },
+  {
+    "name": "bhumika",
+    "email": "bumika@uwo24.com",
+    "password": "$2a$10$ZVfI/ry1kTViC4saSSwp9OMPdRurjK3nWz44LFZGUUjV3C1CENWma",
+    "_id": "mlt6uwncwhedve19mfe",
+    "createdAt": "2026-02-19T08:17:57.962Z",
+    "updatedAt": "2026-02-19T08:18:14.619Z",
+    "purchasedProducts": [
+      "efv_v1_audiobook",
+      "efv_v1_ebook"
+    ]
+  },
+  {
+    "name": "Abha",
+    "email": "abhajatav18@gmail.com",
+    "phone": "9897675567",
+    "password": "$2a$10$49RJCmYpR84.uzVDSO38tu8BX9YofWzVgbkDzlRvts7goNUH20yoi",
+    "role": "user",
+    "_id": "mlt8fqcvzvjdherle1j",
+    "createdAt": "2026-02-19T09:02:09.199Z",
+    "updatedAt": "2026-02-19T09:02:29.188Z",
+    "purchasedProducts": [
+      "efv_v1_audiobook",
+      "efv_v1_ebook"
+    ]
   }
 ]
