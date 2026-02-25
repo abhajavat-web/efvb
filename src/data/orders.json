@@ -1,197 +1,5 @@
 [
   {
-    "_id": "ORD-78960252",
-    "customer": {
-      "name": "Abha",
-      "email": "abha@uwo24.com",
-      "address": "123 EFV St, Meta City"
-    },
-    "items": [],
-    "totalAmount": 0,
-    "paymentMethod": "COD",
-    "status": "Pending",
-    "timeline": [
-      {
-        "status": "Pending",
-        "timestamp": "2026-02-16T07:43:09.603Z",
-        "note": "Order placed successfully"
-      }
-    ],
-    "createdAt": "2026-02-16T07:43:09.604Z",
-    "updatedAt": "2026-02-16T07:43:09.604Z"
-  },
-  {
-    "_id": "ORD-804318371",
-    "customer": {
-      "name": "Abha",
-      "email": "abha@uwo24.com",
-      "address": "123 EFV St, Meta City"
-    },
-    "items": [],
-    "totalAmount": 0,
-    "paymentMethod": "COD",
-    "status": "Pending",
-    "timeline": [
-      {
-        "status": "Pending",
-        "timestamp": "2026-02-16T07:43:24.318Z",
-        "note": "Order placed successfully"
-      }
-    ],
-    "createdAt": "2026-02-16T07:43:24.319Z",
-    "updatedAt": "2026-02-16T07:43:24.319Z"
-  },
-  {
-    "_id": "ORD-107854357",
-    "customer": {
-      "name": "Abha",
-      "email": "abha@uwo24.com",
-      "address": "123 EFV St, Meta City"
-    },
-    "items": [],
-    "totalAmount": 0,
-    "paymentMethod": "COD",
-    "status": "Pending",
-    "timeline": [
-      {
-        "status": "Pending",
-        "timestamp": "2026-02-16T07:48:27.854Z",
-        "note": "Order placed successfully"
-      }
-    ],
-    "createdAt": "2026-02-16T07:48:27.854Z",
-    "updatedAt": "2026-02-16T07:48:27.854Z"
-  },
-  {
-    "_id": "ORD-119429946",
-    "customer": {
-      "name": "Abha",
-      "email": "abha@uwo24.com",
-      "address": "123 EFV St, Meta City"
-    },
-    "items": [],
-    "totalAmount": 0,
-    "paymentMethod": "COD",
-    "status": "Pending",
-    "timeline": [
-      {
-        "status": "Pending",
-        "timestamp": "2026-02-16T07:48:39.431Z",
-        "note": "Order placed successfully"
-      }
-    ],
-    "createdAt": "2026-02-16T07:48:39.432Z",
-    "updatedAt": "2026-02-16T07:48:39.432Z"
-  },
-  {
-    "orderId": "ORD-TEST-019648",
-    "customer": {
-      "name": "dev",
-      "email": "devansh1@gmail.com",
-      "phone": "0000000000",
-      "address": {
-        "street": "Digital Purchase",
-        "city": "Internet",
-        "zip": "000000"
-      }
-    },
-    "items": [
-      {
-        "productId": "efv_v1_ebook",
-        "title": "EFV™ VOL 1: ORIGIN CODE™",
-        "type": "EBOOK",
-        "price": 149,
-        "quantity": 1
-      }
-    ],
-    "totalAmount": 149,
-    "paymentMethod": "DIGITAL_TEST",
-    "paymentStatus": "Paid",
-    "status": "Delivered",
-    "paymentId": "DIG-ORD-TEST-019648",
-    "timeline": [
-      {
-        "status": "Delivered",
-        "note": "Digital Item Unlocked (Test Mode)"
-      }
-    ],
-    "_id": "mlt6tnnmwpgavmwbi0l",
-    "createdAt": "2026-02-19T08:16:59.650Z",
-    "updatedAt": "2026-02-19T08:16:59.650Z"
-  },
-  {
-    "orderId": "ORD-TEST-088674",
-    "customer": {
-      "name": "bhumika",
-      "email": "bumika@uwo24.com",
-      "phone": "0000000000",
-      "address": {
-        "street": "Digital Purchase",
-        "city": "Internet",
-        "zip": "000000"
-      }
-    },
-    "items": [
-      {
-        "productId": "efv_v1_audiobook",
-        "title": "EFV™ VOL 1: ORIGIN CODE™",
-        "type": "AUDIOBOOK",
-        "price": 199,
-        "quantity": 1
-      }
-    ],
-    "totalAmount": 199,
-    "paymentMethod": "DIGITAL_TEST",
-    "paymentStatus": "Paid",
-    "status": "Delivered",
-    "paymentId": "DIG-ORD-TEST-088674",
-    "timeline": [
-      {
-        "status": "Delivered",
-        "note": "Digital Item Unlocked (Test Mode)"
-      }
-    ],
-    "_id": "mlt6v4wzuqkhezxi7g",
-    "createdAt": "2026-02-19T08:18:08.675Z",
-    "updatedAt": "2026-02-19T08:18:08.675Z"
-  },
-  {
-    "orderId": "ORD-TEST-094617",
-    "customer": {
-      "name": "bhumika",
-      "email": "bumika@uwo24.com",
-      "phone": "0000000000",
-      "address": {
-        "street": "Digital Purchase",
-        "city": "Internet",
-        "zip": "000000"
-      }
-    },
-    "items": [
-      {
-        "productId": "efv_v1_ebook",
-        "title": "EFV™ VOL 1: ORIGIN CODE™",
-        "type": "EBOOK",
-        "price": 149,
-        "quantity": 1
-      }
-    ],
-    "totalAmount": 149,
-    "paymentMethod": "DIGITAL_TEST",
-    "paymentStatus": "Paid",
-    "status": "Delivered",
-    "paymentId": "DIG-ORD-TEST-094617",
-    "timeline": [
-      {
-        "status": "Delivered",
-        "note": "Digital Item Unlocked (Test Mode)"
-      }
-    ],
-    "_id": "mlt6v9i1uk8itatfq8i",
-    "createdAt": "2026-02-19T08:18:14.617Z",
-    "updatedAt": "2026-02-19T08:18:14.617Z"
-  },
-  {
     "orderId": "ORD-TEST-742054",
     "customer": {
       "name": "Abha",
@@ -251,16 +59,20 @@
     "totalAmount": 149,
     "paymentMethod": "DIGITAL_TEST",
     "paymentStatus": "Paid",
-    "status": "Delivered",
+    "status": "Out for Delivery",
     "paymentId": "DIG-ORD-TEST-749184",
     "timeline": [
       {
         "status": "Delivered",
         "note": "Digital Item Unlocked (Test Mode)"
+      },
+      {
+        "status": "Out for Delivery",
+        "note": "Status updated to Out for Delivery"
       }
     ],
     "_id": "mlt8g5s1l1ech27pfkg",
     "createdAt": "2026-02-19T09:02:29.185Z",
-    "updatedAt": "2026-02-19T09:02:29.185Z"
+    "updatedAt": "2026-02-25T12:12:40.537Z"
   }
 ]

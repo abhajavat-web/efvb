@@ -418,4 +418,18 @@ router.post('/test-digital', protect, async (req, res) => {
     }
 });
 
+// Delete Order (Admin Only)
+router.delete('/:id', adminAuth, async (req, res) => {
+    try {
+        const order = await Order.findByIdAndDelete(req.params.id) || await Order.findOneAndDelete({ orderId: req.params.id });
+        if (!order) {
+            return res.status(404).json({ message: 'Order not found' });
+        }
+        res.json({ message: 'Order deleted successfully' });
+    } catch (error) {
+        console.error('Delete Order Error:', error);
+        res.status(500).json({ message: 'Error deleting order' });
+    }
+});
+
 module.exports = router;

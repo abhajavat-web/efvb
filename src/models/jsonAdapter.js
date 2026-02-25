@@ -145,6 +145,15 @@ class JsonModel {
                 }
                 return null;
             }
+
+            static async findOneAndDelete(query) {
+                const item = await this.findOne(query);
+                if (item) {
+                    db.delete((item._id || item.id).toString());
+                    return item;
+                }
+                return null;
+            }
         };
     }
 }
