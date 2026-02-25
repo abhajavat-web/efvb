@@ -99,6 +99,24 @@ class JsonModel {
                 return null;
             }
 
+            static async updateMany(query, updates) {
+                const data = db.getAll();
+                let modifiedCount = 0;
+                const updatedData = data.map(item => {
+                    const matches = Object.entries(query).every(([key, value]) => {
+                        // Very basic support: doesn't handle nested paths like "items.productId" properly yet
+                        return item[key] == value;
+                    });
+                    if (matches) {
+                        modifiedCount++;
+                        return { ...item, ...updates.$set }; // Simple $set support
+                    }
+                    return item;
+                });
+                db.write(updatedData);
+                return { modifiedCount };
+            }
+
             static async create(data) {
                 const items = Array.isArray(data) ? data : [data];
                 const createdItems = items.map(item => db.create(item));

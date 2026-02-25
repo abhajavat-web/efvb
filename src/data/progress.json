@@ -35,13 +35,13 @@
     "userId": "admin_user_001",
     "productId": "efv_v1_audiobook",
     "type": "AUDIOBOOK",
-    "currentTime": 2.011982,
-    "lastUpdated": 1771927203732,
+    "currentTime": 10.239596,
+    "lastUpdated": 1772016662978,
     "_id": "mlrw82wmt5rkofsaw8p",
     "createdAt": "2026-02-18T10:32:30.646Z",
-    "updatedAt": "2026-02-24T10:00:03.734Z",
-    "progress": 9.880844882656305,
-    "totalDuration": 20.362449
+    "updatedAt": "2026-02-25T10:51:02.978Z",
+    "progress": 10.386453914890588,
+    "totalDuration": 98.586063
   },
   {
     "userId": "admin_user_001",
@@ -49,10 +49,10 @@
     "type": "EBOOK",
     "lastPage": 1,
     "totalPages": 1,
-    "lastUpdated": 1771927210683,
+    "lastUpdated": 1772016667007,
     "_id": "mlry9un97u4whufv6d5",
     "createdAt": "2026-02-18T11:29:52.485Z",
-    "updatedAt": "2026-02-24T10:00:10.684Z",
+    "updatedAt": "2026-02-25T10:51:07.008Z",
     "progress": 100
   },
   {

@@ -91,18 +91,31 @@ router.put('/:id', adminAuth, async (req, res) => {
         // GLOBAL SYNC: Update this product in EVERY user's digital library
         if (product.type === 'EBOOK' || product.type === 'AUDIOBOOK') {
             try {
-                const syncResult = await DigitalLibrary.updateMany(
-                    { "items.productId": product._id },
-                    {
-                        $set: {
-                            "items.$.title": product.title,
-                            "items.$.thumbnail": product.thumbnail,
-                            "items.$.filePath": product.filePath,
-                            "items.$.type": product.type === 'AUDIOBOOK' ? 'Audiobook' : 'E-Book'
+                const libraries = await DigitalLibrary.find({});
+                let modifiedCount = 0;
+
+                for (let lib of libraries) {
+                    let changed = false;
+                    lib.items = lib.items.map(item => {
+                        if (item.productId && item.productId.toString() === product._id.toString()) {
+                            changed = true;
+                            return {
+                                ...item,
+                                title: product.title,
+                                thumbnail: product.thumbnail,
+                                filePath: product.filePath,
+                                type: product.type === 'AUDIOBOOK' ? 'Audiobook' : 'E-Book'
+                            };
                         }
+                        return item;
+                    });
+
+                    if (changed) {
+                        await lib.save();
+                        modifiedCount++;
                     }
-                );
-                console.log(`🌐 Global Library Sync: Updated ${syncResult.modifiedCount} users for product ${product._id}`);
+                }
+                console.log(`🌐 Global Library Sync: Updated ${modifiedCount} users for product ${product._id}`);
             } catch (syncErr) {
                 console.error('❌ Global library sync error:', syncErr);
             }

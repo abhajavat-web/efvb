@@ -55,8 +55,14 @@ router.put('/profile', protect, async (req, res) => {
 router.post('/address', protect, async (req, res) => {
     try {
         const user = await User.findById(req.user._id);
+        if (!user.savedAddresses) user.savedAddresses = [];
+
         if (req.body.isDefault) {
             user.savedAddresses.forEach(a => a.isDefault = false);
+        }
+        // Ensure ID for JSON DB mode
+        if (!req.body._id && !req.body.id) {
+            req.body._id = 'addr_' + Date.now().toString(36) + Math.random().toString(36).substr(2);
         }
         user.savedAddresses.push(req.body);
         await user.save();
@@ -70,13 +76,17 @@ router.post('/address', protect, async (req, res) => {
 router.put('/address/:id', protect, async (req, res) => {
     try {
         const user = await User.findById(req.user._id);
-        const addrIndex = user.savedAddresses.findIndex(a => a._id.toString() === req.params.id);
+        if (!user.savedAddresses) return res.status(404).json({ message: 'No addresses found' });
+
+        const addrIndex = user.savedAddresses.findIndex(a => (a._id || a.id || '').toString() === req.params.id);
         if (addrIndex === -1) return res.status(404).json({ message: 'Address not found' });
 
-        if (req.body.isDefault && user.savedAddresses) {
+        if (req.body.isDefault) {
             user.savedAddresses.forEach(a => a.isDefault = false);
         }
-        user.savedAddresses[addrIndex] = { ...user.savedAddresses[addrIndex].toObject(), ...req.body };
+        const existingAddr = user.savedAddresses[addrIndex];
+        const addrData = typeof existingAddr.toObject === 'function' ? existingAddr.toObject() : existingAddr;
+        user.savedAddresses[addrIndex] = { ...addrData, ...req.body };
         await user.save();
         res.json(user.savedAddresses);
     } catch (error) {
@@ -88,7 +98,9 @@ router.put('/address/:id', protect, async (req, res) => {
 router.delete('/address/:id', protect, async (req, res) => {
     try {
         const user = await User.findById(req.user._id);
-        user.savedAddresses = user.savedAddresses.filter(a => a._id.toString() !== req.params.id);
+        if (!user.savedAddresses) return res.json([]);
+
+        user.savedAddresses = user.savedAddresses.filter(a => (a._id || a.id || '').toString() !== req.params.id);
         await user.save();
         res.json(user.savedAddresses);
     } catch (error) {
@@ -134,7 +146,7 @@ router.get('/notifications', protect, async (req, res) => {
 router.put('/notifications/:id/read', protect, async (req, res) => {
     try {
         const user = await User.findById(req.user._id);
-        const note = user.notifications.id(req.params.id);
+        const note = user.notifications.find(n => (n._id || n.id).toString() === req.params.id);
         if (note) {
             note.isRead = true;
             await user.save();

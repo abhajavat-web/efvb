@@ -12,6 +12,10 @@ connectDB();
 
 const app = express();
 
+console.log('--- DATABASE MODE CHECK ---');
+console.log('USE_JSON_DB:', process.env.USE_JSON_DB);
+console.log('---------------------------');
+
 app.use(cors());
 app.use(express.json());
 

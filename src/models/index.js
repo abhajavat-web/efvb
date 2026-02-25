@@ -18,10 +18,12 @@ const userSchema = new mongoose.Schema({
         pincode: String,
         state: String,
         city: String,
-        fullAddress: String,
+        house: String,
+        area: String,
         landmark: String,
-        isDefault: { type: Boolean, default: false },
-        label: { type: String, default: 'Home' } // Home, Office, etc.
+        type: { type: String, default: 'Home' }, // Home, Work
+        fullAddress: String, // Combined string for legacy support
+        isDefault: { type: Boolean, default: false }
     }],
     wishlist: [{ type: mongoose.Schema.Types.ObjectId, ref: 'Product' }],
     notifications: [{
@@ -108,7 +110,7 @@ const orderSchema = new mongoose.Schema({
         name: String,
         email: String,
         phone: String,
-        address: String,
+        address: Object, // Store the full address object for reliability
         city: String,
         zip: String
     },

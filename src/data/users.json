@@ -2,12 +2,20 @@
   {
     "name": "Super Admin",
     "email": "admin@uwo24.com",
-    "password": "$2a$10$9Pjzsy5YwkG2p38Up1HIZed0GE1suTQylPovVLuM1rsnbvOlMFcea",
+    "password": "$2a$10$sG6zXlxE6DS6tS7zpBA.oeMN8hBE3hWTw5IEFXp5Xs866uwVi9fha",
     "role": "admin",
     "_id": "admin_user_001",
     "createdAt": "2026-02-18T08:30:00.000Z",
-    "updatedAt": "2026-02-24T08:25:02.562Z",
+    "updatedAt": "2026-02-25T11:01:45.308Z",
     "notifications": [
+      {
+        "_id": "welcome-1772017040519",
+        "type": "Digital",
+        "title": "Welcome back, Super Admin! 👋",
+        "message": "Great to see you again. Your personal activity center is ready.",
+        "isRead": false,
+        "createdAt": "2026-02-25T10:57:20.519Z"
+      },
       {
         "_id": "welcome-1771921502561",
         "type": "Digital",
@@ -16,7 +24,10 @@
         "isRead": false,
         "createdAt": "2026-02-24T08:25:02.561Z"
       }
-    ]
+    ],
+    "resetPasswordOTP": null,
+    "resetPasswordExpires": null,
+    "resetAttempts": null
   },
   {
     "name": "abha",
@@ -38,16 +49,33 @@
     "updatedAt": "2026-02-18T08:04:44.885Z"
   },
   {
-    "name": "ADITI",
+    "name": "abha ",
     "email": "aditi@uwo24.com",
     "password": "$2a$10$/PVfI.EETfYEtjIjLevskO6kViVSo5WFg4qdBo0jT92b9rXOadCUi",
     "_id": "mlt058axclnz799ag4q",
     "createdAt": "2026-02-19T05:10:02.313Z",
-    "updatedAt": "2026-02-24T15:23:35.772Z",
+    "updatedAt": "2026-02-25T09:54:08.667Z",
     "resetPasswordOTP": null,
     "resetPasswordExpires": null,
     "resetAttempts": null,
     "notifications": [
+      {
+        "_id": "welcome-1772013248666",
+        "type": "Digital",
+        "title": "Welcome back, abha ! 👋",
+        "message": "Great to see you again. Your personal activity center is ready.",
+        "isRead": false,
+        "createdAt": "2026-02-25T09:54:08.666Z"
+      },
+      {
+        "_id": "reply-1771998626107",
+        "title": "New Support Reply",
+        "message": "Admin replied to your ticket: \"techh\"",
+        "type": "General",
+        "link": "profile.html?tab=support",
+        "isRead": false,
+        "createdAt": "2026-02-25T05:50:26.107Z"
+      },
       {
         "title": "New Support Reply",
         "message": "Admin replied to your ticket: \"techh\"",
@@ -63,6 +91,22 @@
         "message": "Great to see you again. Your personal activity center is ready.",
         "isRead": false,
         "createdAt": "2026-02-24T08:22:02.151Z"
+      }
+    ],
+    "savedAddresses": [
+      {
+        "fullName": "Aditi Lakhera",
+        "phone": "7879171870",
+        "pincode": "482002",
+        "state": "Madhya Pradesh",
+        "city": "Jabalpur",
+        "house": "DFV",
+        "area": "VFDSFD",
+        "landmark": "FDV",
+        "type": "Home",
+        "isDefault": true,
+        "fullAddress": "DFV, VFDSFD",
+        "_id": "addr_mm1sn0lvt49z83rurdf"
       }
     ]
   },
@@ -110,5 +154,33 @@
       "efv_v1_audiobook",
       "efv_v1_ebook"
     ]
+  },
+  {
+    "name": "Test User",
+    "email": "test@test.com",
+    "phone": "",
+    "password": "$2a$10$ko0DGpoO/4F4Agf45FmyV.7RtI1ECsy2RWVh6Lsk2KOUrw00ndsXK",
+    "role": "user",
+    "notifications": [
+      {
+        "_id": "welcome-1772005171735",
+        "type": "Digital",
+        "title": "Welcome back, Test User! 👋",
+        "message": "Great to see you again. Your personal activity center is ready.",
+        "isRead": false,
+        "createdAt": "2026-02-25T07:39:31.735Z"
+      },
+      {
+        "_id": "welcome-new-1772005114747",
+        "type": "Digital",
+        "title": "Welcome to EFV, Test User! 🚀",
+        "message": "Your journey starts here. Explore our marketplace and build your personal library.",
+        "isRead": false,
+        "createdAt": "2026-02-25T07:38:34.747Z"
+      }
+    ],
+    "_id": "mm1q3d6jet4v6wksuyt",
+    "createdAt": "2026-02-25T07:38:34.747Z",
+    "updatedAt": "2026-02-25T07:39:31.736Z"
   }
 ]

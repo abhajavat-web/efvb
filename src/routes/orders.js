@@ -9,8 +9,16 @@ const { createRazorpayOrder, verifyPaymentSignature } = require('../utils/razorp
 // Get current user's orders
 router.get('/my-orders', protect, async (req, res) => {
     try {
-        const orders = await Order.find({ "customer.email": req.user.email }).sort({ createdAt: -1 });
-        res.json(orders);
+        const query = {
+            $or: [
+                { userId: req.user._id },
+                { "customer.email": req.user.email }
+            ]
+        };
+        const orders = await Order.find(query);
+        // Sort manually if JsonAdapter doesn't support complex sorts
+        const sortedOrders = orders.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+        res.json(sortedOrders);
     } catch (error) {
         res.status(500).json({ message: 'Error fetching orders' });
     }
@@ -81,7 +89,7 @@ router.post('/', async (req, res) => {
 });
 
 // Create Razorpay Order
-router.post('/razorpay', async (req, res) => {
+router.post('/razorpay', protect, async (req, res) => {
     try {
         const { amount, currency } = req.body;
         if (!amount) return res.status(400).json({ message: 'Amount is required' });
@@ -94,14 +102,15 @@ router.post('/razorpay', async (req, res) => {
 });
 
 // Verify Payment and Finalize Order
-router.post('/verify', async (req, res) => {
+router.post('/verify', protect, async (req, res) => {
     try {
         const {
             razorpay_order_id,
             razorpay_payment_id,
             razorpay_signature,
-            customer,
-            items
+            checkoutData,
+            customer: directCustomer,
+            items: directItems
         } = req.body;
 
         // 1. Verify Signature
@@ -110,35 +119,74 @@ router.post('/verify', async (req, res) => {
             return res.status(400).json({ message: 'Invalid payment signature' });
         }
 
-        // 2. Fulfill Order (Same logic as manual order but with payment success)
+        // 2. Fulfill Order
+        const user = await User.findOne({ email: req.user.email });
+        if (!user) return res.status(404).json({ message: 'User not found' });
+
+        // Flexible extraction of items and address
+        let finalItems = [];
+        let address = null;
+
+        if (checkoutData) {
+            finalItems = checkoutData.items || [];
+            if (checkoutData.selectedAddressId) {
+                address = user.savedAddresses.find(a => (a._id || a.id || '').toString() === checkoutData.selectedAddressId.toString());
+            } else if (checkoutData.address) {
+                address = checkoutData.address;
+            }
+        } else {
+            finalItems = directItems || [];
+            if (directCustomer) {
+                address = {
+                    fullName: directCustomer.name,
+                    email: directCustomer.email,
+                    phone: directCustomer.phone || user.phone || '0000000000',
+                    house: directCustomer.address || '',
+                    city: directCustomer.city || 'Unknown',
+                    pincode: directCustomer.zip || directCustomer.pincode || '000000'
+                };
+            }
+        }
+
+        if (!address) return res.status(400).json({ message: 'Shipping address missing' });
+        if (!finalItems || finalItems.length === 0) return res.status(400).json({ message: 'No items in order' });
+
         let totalAmount = 0;
         const orderItems = [];
 
-        for (const item of items) {
-            const product = await Product.findById(item.productId);
-            if (!product) continue;
+        for (const item of finalItems) {
+            // Find product to get latest price/stock
+            const product = await Product.findById(item.id || item.productId);
+            if (!product) {
+                console.warn(`Product not found during verification: ${item.id || item.productId}`);
+                continue;
+            }
 
-            const price = product.price * (1 - (product.discount || 0) / 100);
-            totalAmount += price * item.quantity;
-
+            totalAmount += product.price * item.quantity;
             orderItems.push({
                 productId: product._id,
                 title: product.title,
                 type: product.type,
-                price: price,
+                price: product.price,
                 quantity: item.quantity
             });
-
-            // If E-Book or Audiobook, we'll need to sync library later in frontend 
-            // but backend can also handle it if user is logged in.
-            // For now, we rely on the frontend checkoutOrder logic to sync.
         }
+
+        if (orderItems.length === 0) return res.status(400).json({ message: 'No valid products found in order' });
 
         const newOrder = await Order.create({
             orderId: 'ORD-' + Date.now().toString().slice(-6) + Math.floor(Math.random() * 1000),
-            customer,
+            userId: user._id,
+            customer: {
+                name: address.fullName || user.name,
+                email: address.email || user.email,
+                phone: address.phone || user.phone || '0000000000',
+                address: address, // Store the full address object
+                city: address.city || '',
+                zip: address.pincode || address.zip || ''
+            },
             items: orderItems,
-            totalAmount: Math.round(totalAmount),
+            totalAmount: Math.round(totalAmount * 1.18), // Including 18% GST as per frontend calc
             paymentMethod: 'Razorpay',
             paymentStatus: 'Paid',
             status: 'Processing',
@@ -149,41 +197,38 @@ router.post('/verify', async (req, res) => {
         });
 
         // 3. Handle Digital Library Fulfillment
-        const user = await User.findOne({ email: customer.email });
-        if (user) {
-            const digitalItems = [];
-            for (const item of orderItems) {
-                if (item.type === 'EBOOK' || item.type === 'AUDIOBOOK') {
-                    const product = await Product.findById(item.productId);
-                    if (product) {
-                        digitalItems.push({
-                            productId: product._id,
-                            title: product.title,
-                            type: product.type === 'AUDIOBOOK' ? 'Audiobook' : 'E-Book',
-                            thumbnail: product.thumbnail,
-                            filePath: product.filePath,
-                            purchasedAt: new Date()
-                        });
-                    }
+        const digitalItems = [];
+        for (const item of orderItems) {
+            if (item.type === 'EBOOK' || item.type === 'AUDIOBOOK') {
+                const product = await Product.findById(item.productId);
+                if (product) {
+                    digitalItems.push({
+                        productId: product._id,
+                        title: product.title,
+                        type: product.type === 'AUDIOBOOK' ? 'Audiobook' : 'E-Book',
+                        thumbnail: product.thumbnail,
+                        filePath: product.filePath,
+                        purchasedAt: new Date()
+                    });
                 }
             }
+        }
 
-            if (digitalItems.length > 0) {
-                let library = await DigitalLibrary.findOne({ userId: user._id });
-                if (!library) {
-                    library = new DigitalLibrary({ userId: user._id, items: [] });
-                }
-
-                // Add only if not already owned
-                digitalItems.forEach(di => {
-                    if (!library.items.some(li => li.productId.toString() === di.productId.toString())) {
-                        library.items.push(di);
-                    }
-                });
-
-                await library.save();
-                console.log(`✅ Digital items added to library for user: ${user.email}`);
+        if (digitalItems.length > 0) {
+            let library = await DigitalLibrary.findOne({ userId: user._id.toString() });
+            if (!library) {
+                library = await DigitalLibrary.create({ userId: user._id.toString(), items: [] });
             }
+
+            // Add only if not already owned
+            digitalItems.forEach(di => {
+                if (!library.items.some(li => li.productId.toString() === di.productId.toString())) {
+                    library.items.push(di);
+                }
+            });
+
+            await library.save();
+            console.log(`✅ Digital items added to library for user: ${user.email}`);
         }
 
         res.status(201).json({
